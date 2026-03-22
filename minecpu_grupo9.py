@@ -42,9 +42,6 @@ class MiniCPU:
         f' R2={self.reg[2]:3d} R3={self.reg[3]:3d}'
         f' | PC={self.pc:3d} ZF={self.zf}')
 
-# Página 7
-
-# CPU – Torneio de Processadores Infraestrutura de Hardware
 
     def run(self):
         while self.running and self.pc < 256:
@@ -54,27 +51,12 @@ class MiniCPU:
             self.trace(op, a, b)
 
 
+cpu = MiniCPU()
 
-# class MiniCPU:
-#     def __init__(self):
-#         self.memoria = [0] * 256
-#         self.registradores = [0] * 4
-#         self.pc = 0
-#         self.zf = 0
-#         self.esta_executando = True
-#         self.ciclo_atual = 0
 
-#     def fetch(self):
-#         if self.pc + 2 >= 256:
-#             self.esta_executando = False
-#             return 0, 0, 0
-        
-#         opcode = self.memoria[self.pc]
-#         operando_a = self.memoria[self.pc + 1]
-#         operando_b = self.memoria[self.pc + 2]
-#         self.pc += 3
-        
-#         return opcode, operando_a, operando_b
+cpu.mem[0x08] = 20  # =  Limiar
+cpu.mem[0x10:0x18] = [10, 25, 5, 30, 15, 40, 8, 22] 
+
 
 
 
