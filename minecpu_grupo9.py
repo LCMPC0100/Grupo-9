@@ -1,45 +1,45 @@
 class MiniCPU:
     def __init__(self):
-        self.mem = [0] * 256
-        self.reg = [0, 0, 0, 0] # R0-R3
+        self.mem = [0] * 256        # espaços de memoria
+        self.reg = [0, 0, 0, 0]     # R0-R3
         self.pc = 0
-        self.zf = 0
-        self.nf = 0
-        self.running = True
+        self.zf = 0                 # Zero Flag <----\
+        self.nf = 0                 # Negative Flag <-\-> essas flags servem para saber
+        self.running = True         #                     se um valor é 0 ou negativo
         self.ciclo = 0
         
-    def fetch(self):
-        op = self.mem[self.pc]
-        a = self.mem[self.pc + 1]
-        b = self.mem[self.pc + 2]
+    def fetch(self):                    # o programa aponta para a proxima instrução
+        op = self.mem[self.pc]          # pegando 3 valores por vez, a op (operação)
+        a = self.mem[self.pc + 1]       # e os parametros "a" e "b"
+        b = self.mem[self.pc + 2]       #
         self.pc += 3
         return op, a, b
     
     def decode_execute(self, op, a, b):
-        if op == 0x01: self.reg[a] = self.mem[b] # LOAD
-        elif op == 0x02: self.mem[b] = self.reg[a] # STORE
-        elif op == 0x03: # ADD
+        if op == 0x01: self.reg[a] = self.mem[b] # ---------------- LOAD
+        elif op == 0x02: self.mem[b] = self.reg[a] # -------------- STORE
+        elif op == 0x03: # ---------------------------------------- ADD
             self.reg[a] = (self.reg[a] + self.reg[b]) & 0xFF
-        elif op == 0x04: # SUB
+        elif op == 0x04: # ---------------------------------------- SUB
             res = self.reg[a] - self.reg[b]
             self.reg[a] = res & 0xFF
             self.zf = 1 if (res & 0xFF) == 0 else 0
             self.nf = 1 if res < 0 else 0
-        elif op == 0x05: self.reg[a] = b # MOV
-        elif op == 0x06: # CMP
+        elif op == 0x05: self.reg[a] = b # ------------------------ MOV
+        elif op == 0x06: # ---------------------------------------- CMP
             res = self.reg[a] - self.reg[b]
             self.zf = 1 if (res & 0xFF) == 0 else 0
             self.nf = 1 if res < 0 else 0
-        elif op == 0x07: self.pc = a # JMP
-        elif op == 0x08: # JZ
+        elif op == 0x07: self.pc = a # ---------------------------- JMP
+        elif op == 0x08: # ---------------------------------------- JZ
             if self.zf: self.pc = a
-        elif op == 0x09: # JNZ
+        elif op == 0x09: # ---------------------------------------- JNZ
             if not self.zf: self.pc = a
-        elif op == 0x0B: # JLE (Pula se menor ou igual)
+        elif op == 0x0B: # ---------------------------------------- JLE (Pula se menor ou igual)
             if self.nf or self.zf: self.pc = a
-        elif op == 0x0A: self.running = False # HALT
+        elif op == 0x0A: self.running = False # ------------------- HALT (Interromper)
         
-    def trace(self, op, a, b):
+    def trace(self, op, a, b):  # O que é printado no terminal
         nomes = {1:'LOAD',2:'STORE',3:'ADD',4:'SUB',5:'MOV',6:'CMP',7:'JMP',8:'JZ',9:'JNZ',10:'HALT',11:'JLE'}
         nome = nomes.get(op, '???')
         print(f'Ciclo {self.ciclo:2d}: {nome:5s} {a},{b} |'
@@ -56,10 +56,12 @@ class MiniCPU:
 
 cpu = MiniCPU()
 
-cpu.mem[0x08] = 20  # = Limiar
-cpu.mem[0x10:0x18] = [10, 25, 5, 30, 15, 40, 8, 22] 
+cpu.mem[0x08] = 20  # ----------------------------------- Limiar
+cpu.mem[0x10:0x18] = [2, 53, 6, 30, 15, 36, 7, 22] # --- Valores
 
-p = 0
+p = 0x40 # ------------------------------------------------------ presente para evitar que o programa
+cpu.pc = 0x40 # ------------------------------------------------- sobre escreva os espaços anteriores
+
 def inst(op, a, b):
     global p
     cpu.mem[p] = op
@@ -72,8 +74,8 @@ inst(0x05, 2, 0)
 inst(0x05, 3, 1)    
 
 for addr in range(0x10, 0x18):
-    inst(0x01, 0, addr)  #LOAD R0, valor
-    inst(0x06, 0, 1)    #CMP R0,R1
+    inst(0x01, 0, addr)  # ------------------------ LOAD R0, valor
+    inst(0x06, 0, 1)    # ------------------------- CMP R0,R1
    
     inst(0x0B, p + 6, 0) 
     inst(0x03, 2, 3)    
